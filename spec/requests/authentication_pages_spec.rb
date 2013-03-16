@@ -8,7 +8,14 @@ describe "Authentication" do
 		before { visit signin_path }
 		
 		it { should have_title("Sign in") }
-		it { should have_header("Sign in") }				
+		it { should have_header("Sign in") }
+		
+		describe "for non-signed-in users" do
+			it { should_not have_link("Users", href: users_path) }
+			it { should_not have_link("Profile") }
+			it { should_not have_link("Settings") }
+			it { should_not have_link("Sign out", href: signout_path) }
+		end
 	end
 	
 	describe "signin" do
@@ -51,6 +58,7 @@ describe "Authentication" do
 		describe "for non-signed-in users" do
 			let(:user) { FactoryGirl.create(:user) }
 			
+			# friendly forwarding
 			describe "when attempting to visit a protected page" do
 				before do
 					visit edit_user_path(user)
@@ -62,6 +70,17 @@ describe "Authentication" do
 				describe "after signing in" do
 					it "should render the desired protected page" do
 						page.should have_title("Edit user")
+					end
+					
+					describe "when signing in again" do
+						before do
+							delete signout_path
+							sign_in user
+						end
+						
+						it "should render the default (profile) page" do
+							page.should have_title(user.name)
+						end
 					end
 				end
 			end
@@ -84,6 +103,21 @@ describe "Authentication" do
 			end
 		end
 		
+		describe "for signed-in users" do
+			let(:user) { FactoryGirl.create(:user) }
+			before { sign_in user }
+			
+			describe "when visiting the new user page" do
+				before { visit signup_path }
+				it { should_not have_title("New user") }
+			end
+			
+			describe "submitting a POST request to the Users#create action" do
+				before { post signup_path }
+				specify { response.should redirect_to(root_path) }
+			end
+		end
+		
 		describe "as wrong user" do
 			let(:user) { FactoryGirl.create(:user) }
 			let(:wrong_user) { FactoryGirl.create(:user, email: "wrong@example.com") }
@@ -92,7 +126,7 @@ describe "Authentication" do
 			describe "visiting Users#edit page" do
 				before { visit edit_user_path(wrong_user) }
 				
-				it { should_not have_selector("title", text: full_title("Edit user")) }
+				it { should_not have_title("Edit user") }
 			end
 			
 			describe "submitting a PUT request to the Users#update action" do
@@ -110,6 +144,16 @@ describe "Authentication" do
 			
 			describe "submitting a DELETE request to the Users#destroy action" do
 				before { delete user_path(user) }
+				specify { response.should redirect_to(root_path) }
+			end
+		end
+		
+		describe "as admin user" do
+			let(:admin) { FactoryGirl.create(:admin) }
+			before { sign_in admin }
+			
+			describe "submitting a DELETE request to the Users#destroy action for herself" do
+				before { delete user_path(admin) }
 				specify { response.should redirect_to(root_path) }
 			end
 		end

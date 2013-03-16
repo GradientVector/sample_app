@@ -74,6 +74,10 @@ describe "UserPages" do
 			it { should have_title("Edit user") }
 			it { should have_header("Update your profile") }
 			it { should have_link("change", href: "http://gravatar.com/emails") }
+			
+			describe "gravatar link should open in a new tab" do
+				specify { (find_link("change")[:target]).should == "_blank" }
+			end
 		end
 		
 		describe "with invalid information" do

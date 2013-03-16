@@ -1,5 +1,6 @@
 class UsersController < ApplicationController
 	before_filter :signed_in_user, only: [:index, :edit, :update, :destroy]
+	before_filter :banned_action_for_signed_in_user, only: [:new, :create]
 	before_filter :correct_user, only: [:edit, :update]
 	before_filter :admin_user, only: :destroy
   
@@ -42,9 +43,14 @@ class UsersController < ApplicationController
   end
   
   def destroy
-	User.find(params[:id]).destroy
-	flash[:success] = "User destroyed."
-	redirect_to users_url
+	user = User.find(params[:id])
+	unless current_user?(user)
+		user.destroy
+		flash[:success] = "User destroyed."
+		redirect_to users_url
+	else
+		redirect_to root_path, notice: "Admin users are not allowed to destroy themselves."
+	end
   end
   
   private
@@ -52,6 +58,12 @@ class UsersController < ApplicationController
 		unless signed_in?
 			store_location
 			redirect_to signin_url, notice: "Please sign in." 
+		end
+	end
+	
+	def banned_action_for_signed_in_user
+		if signed_in?
+			redirect_to root_path, notice: "Signed-in users are not allowed to create a new user account."
 		end
 	end
 	

@@ -27,6 +27,8 @@ describe User do
   it { should respond_to(:authenticate) }
   
   it { should be_valid }
+  
+  # admin property
   it { should_not be_admin }
   
   describe "with admin attribute set to 'true'" do
@@ -36,6 +38,15 @@ describe User do
 	end
 	
 	it { should be_admin }	
+  end
+  
+  # accessible properties
+  describe "accessible attributes" do
+	it "should not allow access to admin" do
+		expect do
+			User.new(admin: true)
+		end.to raise_error(ActiveModel::MassAssignmentSecurity::Error)
+	end
   end
   
   # name property
