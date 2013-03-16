@@ -16,10 +16,13 @@ def provide_valid_signup_information(user)
 	fill_in "Confirmation", with: user.password
 end
 
-def valid_signin(user)
+def sign_in(user)
+	visit signin_path
 	fill_in "Email", with: user.email.upcase
 	fill_in "Password", with: user.password
 	click_button "Sign in"
+	# Sign in when not using Capybara as well.
+	cookies[:remember_token] = user.remember_token
 end
 
 RSpec::Matchers.define :have_header do |header|
