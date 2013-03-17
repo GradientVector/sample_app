@@ -54,14 +54,7 @@ class UsersController < ApplicationController
 		end
   end
   
-  private
-		def signed_in_user
-			unless signed_in?
-				store_location
-				redirect_to signin_url, notice: "Please sign in." 
-			end
-		end
-		
+  private		
 		def banned_action_for_signed_in_user
 			if signed_in?
 				redirect_to root_path, notice: "Signed-in users are not allowed to create a new user account."
